@@ -1,0 +1,74 @@
+library(caret)
+library(dplyr)
+install.packages("FNN")
+library(FNN)
+
+players <- read.csv("players S.csv")
+players <- players[-c(98), ]
+str(players)
+
+players$BBp <- as.integer(players$BB.)
+players$Kp <- as.integer(players$K.)
+set.seed(42)
+
+s.fold <- createFolds(players$WAR, k=5)
+
+s.control <- trainControl(
+  summaryFunction = twoClassSummary,
+  classProbs = TRUE, 
+  verboseIter = TRUE,
+  savePredictions = TRUE,
+  index = s.fold
+)
+
+?knnx.dist()
+knn.dist(players, k =10, algorithm = c("kd_tree") )
+str(players)
+?get.knn
+options(max.print=2000)
+knn <- get.knn(players[, 2:13], k = 5)
+knn
+
+# 87   66   92  102   84
+# Adam Lind, Fowler, Kendrys Morales, Sandoval, Seth Smith
+
+savant <- read.csv('Savant Hosmer.csv')
+fg <- read.csv('fg Hos.csv')
+
+colnames(savant)[3] <- "Name"
+
+data <- merge.data.frame(savant, fg, by = "Name", all = T )
+
+data[!(is.na(data$ISO)), ]
+
+data <- data[complete.cases(data),]
+
+h.plot <- ggplot(data, aes(launch_angle, ISO)) + geom_point(position = "jitter") + geom_smooth(method='lm') +
+  geom_text(aes(label=ifelse(data$launch_angle>30,as.character(Name),'')),hjust=1,vjust=1) +
+  geom_text(aes(label=ifelse(data$ISO>0.35,as.character(Name),'')),hjust=0,vjust=0) + 
+  labs(x= "Launch Angle", y = "ISO") + annotate("text", label="Eric Hosmer", x=0.6, y=.199) + 
+  annotate("segment", x=1.8, y=.19, xend=3.5, yend=.178, size=0.5, 
+           arrow=arrow(length=unit(.2, "cm"))) + 
+  geom_text(aes(label=ifelse(data$ISO < 0.05,as.character(Name),'')),hjust=0,vjust=0, position = "jitter")
+
+
+ggplot(data, aes(launch_angle, ISO)) + geom_point() + geom_smooth(method='lm') +
+  geom_text(aes(label=ifelse(data$launch_angle>30,as.character(Name),'')),hjust=1,vjust=1) +
+  geom_text(aes(label=ifelse(data$ISO>0.30,as.character(Name),'')),hjust=0,vjust=0) + 
+  labs(x= "Launch Angle", y = "ISO") + annotate("text", label="Eric Hosmer", x=0.6, y=.199) + 
+  annotate("segment", x=1.8, y=.19, xend=3.5, yend=.178, size=0.5, 
+           arrow=arrow(length=unit(.2, "cm")))
+
+ggplot(data, aes(launch_speed, ISO)) + geom_point(position = "jitter") + geom_smooth(method='lm') +
+  geom_text(aes(label=ifelse(data$launch_speed<85 & data$ISO> 0.2,as.character(Name),'')),hjust=0,vjust=0, nudge_x = 0.3) +
+  geom_text(aes(label=ifelse(data$ISO>0.35,as.character(Name),'')),hjust=0,vjust=0, nudge_x = 0.3) + labs(x= "Exit Velo", y = "ISO") +
+  annotate("text", label="Eric Hosmer", x=93, y=.179, color = 'red') + 
+  annotate("segment", x=91, y=.179, xend=89.2, yend=.179, size=0.5, 
+           arrow=arrow(length=unit(.2, "cm"))) 
+
+annotate("text", label="Eric Hosmer", x=0.6, y=.199) + 
+  annotate("segment", x=1.8, y=.19, xend=3.5, yend=.178, size=0.5, 
+           arrow=arrow(length=unit(.2, "cm"))) + 
+  geom_text(aes(label=ifelse(data$ISO < 0.05,as.character(Name),'')),hjust=0,vjust=0, position = "jitter")
+
+
